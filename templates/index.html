@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protective Order Monitor</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .case { border-bottom: 1px solid #ddd; padding: 15px 0; }
+        .court { color: gray; font-size: 14px; }
+        .snippet { margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+<h1>Protective Order Cases</h1>
+
+{% for case in cases %}
+<div class="case">
+    <strong>{{ case[0] }}</strong><br>
+    <span class="court">{{ case[1] }}</span>
+    <p class="snippet">{{ case[2] }}</p>
+    <small>Added: {{ case[3] }}</small>
+</div>
+{% endfor %}
+
+</body>
+</html>
