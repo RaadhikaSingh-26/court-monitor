@@ -3,10 +3,17 @@ import sqlite3
 import requests
 import os
 
+# 🔹 IMPORT FETCH SCRIPT
+import fetch_data
+
 app = Flask(__name__)
 
 DB_NAME = "cases.db"
 API_KEY = os.getenv("COURTLISTENER_API_KEY")
+
+# 🔹 INITIALIZE DATABASE ON STARTUP (CRITICAL FOR RENDER)
+fetch_data.init_db()
+fetch_data.fetch_cases()
 
 @app.route("/")
 def index():
