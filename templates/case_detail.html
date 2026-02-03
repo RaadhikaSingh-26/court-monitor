@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ case.case_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .court {
+            color: gray;
+            margin-bottom: 20px;
+        }
+        .snippet {
+            background: #f4f4f4;
+            padding: 18px;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<a href="/">← Back to list</a>
+
+<h1>{{ case.case_name }}</h1>
+<div class="court">{{ case.court }}</div>
+
+<div class="snippet">
+    {{ case.snippet | safe }}
+</div>
+
+<p>
+    <strong>Date Filed:</strong> {{ case.date_filed or "Unknown" }}<br>
+    <strong>Fetched:</strong> {{ case.fetched_at }}
+</p>
+
+</body>
+</html>

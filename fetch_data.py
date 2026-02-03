@@ -1,39 +1,81 @@
-print("Running daily protective order fetch...")
-
+import os
 import requests
 import sqlite3
 
-API_KEY = "ceb5359bc7d09f2e1a5e7be98216e73a10873190"
+API_KEY = os.getenv("COURTLISTENER_API_KEY")
+BASE_URL = "https://www.courtlistener.com/api/rest/v3/search/"
+DB_NAME = "cases.db"
 
-url = "https://www.courtlistener.com/api/rest/v3/search/?q=protective+order"
-
-headers = {
-    "Authorization": f"Token {API_KEY}",
-    "User-Agent": "court-monitor-learning-project (contact: test@example.com)"
+HEADERS = {
+    "Authorization": f"Token {API_KEY}"
 }
 
-response = requests.get(url, headers=headers)
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS protective_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            case_name TEXT,
+            court TEXT,
+            date_filed TEXT,
+            opinion_id INTEGER,
+            fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-if response.status_code != 200:
-    print("Error fetching data")
-    exit()
+def normalize_date(date_str):
+    if not date_str:
+        return None
+    return date_str.split("T")[0]
 
-data = response.json()
+def extract_id(url):
+    if not url:
+        return None
+    try:
+        return int(url.rstrip("/").split("/")[-1])
+    except Exception:
+        return None
 
-conn = sqlite3.connect("cases.db")
-cursor = conn.cursor()
+def fetch_cases():
+    params = {
+        "q": "protective order",
+        "page_size": 50
+    }
 
-for result in data["results"]:
-    case_name = result.get("caseName")
-    court = result.get("court")
-    snippet = result.get("snippet")
+    response = requests.get(BASE_URL, headers=HEADERS, params=params)
+    response.raise_for_status()
+    data = response.json()
 
-    cursor.execute("""
-    INSERT INTO protective_orders (case_name, court, snippet)
-    VALUES (?, ?, ?)
-    """, (case_name, court, snippet))
+    results = data.get("results", [])
+    print(f"Fetched {len(results)} cases")
 
-conn.commit()
-conn.close()
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
 
-print("Protective order cases saved to database")
+    inserted = 0
+
+    for item in results:
+        case_name = item.get("caseName")
+        court = item.get("court")
+        date_filed = normalize_date(item.get("dateFiled"))
+        opinion_id = extract_id(item.get("opinion"))
+
+        c.execute("""
+            INSERT INTO protective_orders
+            (case_name, court, date_filed, opinion_id)
+            VALUES (?, ?, ?, ?)
+        """, (case_name, court, date_filed, opinion_id))
+
+        inserted += 1
+
+    conn.commit()
+    conn.close()
+
+    print(f"Inserted {inserted} cases")
+
+if __name__ == "__main__":
+    init_db()
+    fetch_cases()

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Docket Detail</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .entry { margin-bottom: 20px; }
+    strong { background-color: #ffff99; }
+  </style>
+</head>
+<body>
+
+<a href="/">← Back to cases</a>
+
+<h1>{{ docket.case_name }}</h1>
+
+<p>
+  <strong>Court:</strong> {{ docket.court }}<br>
+  <strong>Date Filed:</strong> {{ docket.date_filed }}
+</p>
+
+<h2>Docket Entries</h2>
+
+{% for entry in docket.docket_entries %}
+<div class="entry">
+  <strong>{{ entry.date_filed }}</strong><br>
+  {{ entry.description }}
+</div>
+{% endfor %}
+
+</body>
+</html>

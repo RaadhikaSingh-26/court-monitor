@@ -1,0 +1,5 @@
+cases.db
+__pycache__/
+.env
+*.pyc
+cron.log

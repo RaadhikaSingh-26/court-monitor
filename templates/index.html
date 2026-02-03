@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Protective Order Monitor</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        .case { border-bottom: 1px solid #ddd; padding: 15px 0; }
-        .court { color: gray; font-size: 14px; }
-        .snippet { margin-top: 8px; }
-    </style>
+  <title>Protective Order Cases</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .case { margin-bottom: 30px; }
+    a { text-decoration: none; color: #003366; }
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 12px;
+      background-color: #eee;
+      color: #666;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,10 +23,18 @@
 
 {% for case in cases %}
 <div class="case">
-    <strong>{{ case[0] }}</strong><br>
-    <span class="court">{{ case[1] }}</span>
-    <p class="snippet">{{ case[2] }}</p>
-    <small>Added: {{ case[3] }}</small>
+  <h3>
+    {% if case.opinion_id %}
+      <a href="/opinion/{{ case.opinion_id }}">
+        {{ case.case_name }}
+      </a>
+    {% else %}
+      {{ case.case_name }}
+      <span class="badge">No opinion available</span>
+    {% endif %}
+  </h3>
+
+  <p><em>{{ case.court }} | {{ case.date_filed }}</em></p>
 </div>
 {% endfor %}
 
