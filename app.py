@@ -3,17 +3,10 @@ import sqlite3
 import requests
 import os
 
-# 🔹 IMPORT FETCH SCRIPT
-import fetch_data
-
 app = Flask(__name__)
 
 DB_NAME = "cases.db"
 API_KEY = os.getenv("COURTLISTENER_API_KEY")
-
-# 🔹 INITIALIZE DATABASE ON STARTUP (CRITICAL FOR RENDER)
-fetch_data.init_db()
-fetch_data.fetch_cases()
 
 @app.route("/")
 def index():
@@ -33,9 +26,9 @@ def index():
     cases = []
     for row in rows:
         cases.append({
-            "case_name": row["case_name"] or "Unnamed Case",
-            "court": row["court"] or "Unknown Court",
-            "date_filed": row["date_filed"] or "Unknown Date",
+            "case_name": row["case_name"],
+            "court": row["court"],
+            "date_filed": row["date_filed"],
             "opinion_id": row["opinion_id"]
         })
 

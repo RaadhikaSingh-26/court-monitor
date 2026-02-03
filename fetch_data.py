@@ -1,56 +1,50 @@
-import os
 import requests
 import sqlite3
+import os
 
-API_KEY = os.getenv("COURTLISTENER_API_KEY")
-BASE_URL = "https://www.courtlistener.com/api/rest/v3/search/"
 DB_NAME = "cases.db"
+API_KEY = os.getenv("COURTLISTENER_API_KEY")
 
-HEADERS = {
-    "Authorization": f"Token {API_KEY}"
-}
+SEARCH_URL = "https://www.courtlistener.com/api/rest/v3/search/"
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
+
     c.execute("""
         CREATE TABLE IF NOT EXISTS protective_orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             case_name TEXT,
             court TEXT,
             date_filed TEXT,
-            opinion_id INTEGER,
-            fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            opinion_id INTEGER UNIQUE,
+            UNIQUE(case_name, court, date_filed)
         )
     """)
+
     conn.commit()
     conn.close()
 
-def normalize_date(date_str):
-    if not date_str:
-        return None
-    return date_str.split("T")[0]
-
-def extract_id(url):
-    if not url:
-        return None
-    try:
-        return int(url.rstrip("/").split("/")[-1])
-    except Exception:
-        return None
 
 def fetch_cases():
+    if not API_KEY:
+        print("API key not set. Skipping fetch.")
+        return
+
+    headers = {
+        "Authorization": f"Token {API_KEY}"
+    }
+
     params = {
         "q": "protective order",
         "page_size": 50
     }
 
-    response = requests.get(BASE_URL, headers=HEADERS, params=params)
+    response = requests.get(SEARCH_URL, headers=headers, params=params)
     response.raise_for_status()
-    data = response.json()
 
+    data = response.json()
     results = data.get("results", [])
-    print(f"Fetched {len(results)} cases")
 
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -60,11 +54,18 @@ def fetch_cases():
     for item in results:
         case_name = item.get("caseName")
         court = item.get("court")
-        date_filed = normalize_date(item.get("dateFiled"))
-        opinion_id = extract_id(item.get("opinion"))
+        date_filed = item.get("dateFiled")
+        opinion_id = item.get("opinion_id")
+
+        if not case_name:
+            continue
+
+        # clean date (YYYY-MM-DD)
+        if date_filed and "T" in date_filed:
+            date_filed = date_filed.split("T")[0]
 
         c.execute("""
-            INSERT INTO protective_orders
+            INSERT OR IGNORE INTO protective_orders
             (case_name, court, date_filed, opinion_id)
             VALUES (?, ?, ?, ?)
         """, (case_name, court, date_filed, opinion_id))
@@ -75,6 +76,7 @@ def fetch_cases():
     conn.close()
 
     print(f"Inserted {inserted} cases")
+
 
 if __name__ == "__main__":
     init_db()
