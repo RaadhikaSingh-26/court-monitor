@@ -1,39 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>{{ case.case_name }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            margin: 40px;
+            color: #222;
         }
-        .court {
-            color: gray;
-            margin-bottom: 20px;
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
         }
-        .snippet {
-            background: #f4f4f4;
-            padding: 18px;
-            border-radius: 6px;
-            line-height: 1.6;
+
+        h3 {
+            font-size: 20px;
+            color: #555;
+            margin-top: 0;
+        }
+
+        .meta {
+            margin-top: 25px;
+            margin-bottom: 30px;
+        }
+
+        .meta p {
+            margin: 6px 0;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .muted {
+            color: #777;
+            font-style: italic;
+        }
+
+        .divider {
+            margin: 35px 0;
+            border-top: 1px solid #ddd;
+        }
+
+        .opinion-text {
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        a {
+            color: #5a2ca0;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-<a href="/">← Back to list</a>
+    <!-- CASE TITLE -->
+    <h1>{{ case.case_name }}</h1>
 
-<h1>{{ case.case_name }}</h1>
-<div class="court">{{ case.court }}</div>
+    <!-- COURT -->
+    <h3>{{ case.court }}</h3>
 
-<div class="snippet">
-    {{ case.snippet | safe }}
-</div>
+    <!-- BASIC INFO -->
+    <div class="meta">
+        <p>
+            <span class="label">Date Filed:</span>
+            {{ case.date_filed }}
+        </p>
 
-<p>
-    <strong>Date Filed:</strong> {{ case.date_filed or "Unknown" }}<br>
-    <strong>Fetched:</strong> {{ case.fetched_at }}
-</p>
+        <p>
+            <span class="label">Citations:</span>
+            {% if opinion and opinion.citations and opinion.citations|length > 0 %}
+                {{ opinion.citations | join(", ") }}
+            {% else %}
+                <span class="muted">Not publicly available</span>
+            {% endif %}
+        </p>
+
+        <p>
+            <span class="label">Docket Number:</span>
+            {% if opinion and opinion.docket_number %}
+                {{ opinion.docket_number }}
+            {% else %}
+                <span class="muted">Not publicly available</span>
+            {% endif %}
+        </p>
+
+        <p>
+            <span class="label">Judges:</span>
+            {% if opinion and opinion.judges and opinion.judges|length > 0 %}
+                {{ opinion.judges | join(", ") }}
+            {% else %}
+                <span class="muted">Not publicly available</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- COURTLISTENER LINK -->
+    <p>
+        {% if opinion and opinion.id %}
+            <a href="https://www.courtlistener.com/opinion/{{ opinion.id }}/"
+               target="_blank">
+                🔗 View on CourtListener
+            </a>
+        {% else %}
+            <a href="https://www.courtlistener.com/?q={{ case.case_name | urlencode }}"
+               target="_blank">
+                🔗 Search this case on CourtListener
+            </a>
+        {% endif %}
+    </p>
+
+    <div class="divider"></div>
+
+    <!-- OPINION TEXT -->
+    {% if opinion and opinion.plain_text %}
+        <div class="opinion-text">
+            {{ opinion.plain_text | safe }}
+        </div>
+    {% else %}
+        <p class="muted">
+            No published written opinion is available for this case.
+        </p>
+    {% endif %}
 
 </body>
 </html>
